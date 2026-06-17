@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0284c7" />
+  <title>MK Connect — WiFi Access</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* Portal-only overrides */
+    body { background: var(--primary-xlight); }
+
+    .portal-wrap {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .portal-content {
+      flex: 1;
+      padding-bottom: 2rem;
+    }
+
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: .4rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .step-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: all .3s;
+    }
+
+    .step-dot.active {
+      background: var(--primary);
+      width: 24px;
+      border-radius: 4px;
+    }
+
+    .step-dot.done { background: var(--primary-light); }
+
+    .screen { padding: 0 1rem; }
+
+    .back-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: .5rem;
+      margin-left: -.5rem;
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      font-size: .9rem;
+      font-weight: 600;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .back-btn:hover { color: var(--text); }
+
+    .nav-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    #no-mac-warning {
+      background: var(--warn-light);
+      border-left: 4px solid var(--warn);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin: 1rem;
+      font-size: .9rem;
+      color: #92400e;
+    }
+
+    .wifi-icon-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 2rem 0 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="portal-wrap">
+
+  <!-- Header -->
+  <div class="portal-header">
+    <div class="portal-logo">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+        <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+        <circle cx="12" cy="20" r="1" fill="currentColor"/>
+      </svg>
+    </div>
+    <div id="business-name" style="font-weight:800;font-size:1.2rem;color:var(--primary)">MK Connect</div>
+    <div style="font-size:.82rem;color:var(--text-muted);margin-top:.25rem">Buy WiFi access — fast &amp; easy</div>
+  </div>
+
+  <!-- No-MAC warning (shown if user didn't arrive via Omada redirect) -->
+  <div id="no-mac-warning" style="display:none">
+    <strong>Connect to WiFi first</strong><br>
+    Please connect to the MK Connect WiFi network, then try opening this page again.
+    Your device was not automatically detected.
+  </div>
+
+  <!-- Step indicator -->
+  <div class="step-indicator" id="step-dots">
+    <div class="step-dot active" id="dot-0"></div>
+    <div class="step-dot" id="dot-1"></div>
+    <div class="step-dot" id="dot-2"></div>
+    <div class="step-dot" id="dot-3"></div>
+  </div>
+
+  <div class="portal-content">
+
+    <!-- ─── Screen 0: Plan selection ─────────────────────────────── -->
+    <div class="screen active" id="screen-0">
+      <p class="section-title" style="text-align:center">Choose your plan</p>
+      <div class="plan-grid" id="plan-grid">
+        <!-- Populated by JS -->
+        <div class="card" style="grid-column:1/-1;text-align:center;color:var(--text-muted)">
+          <div class="spinner spinner-primary" style="margin:0 auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Screen 1: Phone number ───────────────────────────────── -->
+    <div class="screen" id="screen-1">
+      <div class="nav-row">
+        <button class="back-btn" onclick="goBack()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Back
+        </button>
+      </div>
+
+      <div class="card" style="margin-bottom:1rem">
+        <p class="section-title">Selected plan</p>
+        <div id="selected-plan-summary"></div>
+      </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label for="phone-input">Your phone number</label>
+          <input
+            type="tel"
+            id="phone-input"
+            placeholder="e.g. 0712 345 678"
+            autocomplete="tel"
+            inputmode="tel"
+          />
+          <p style="font-size:.8rem;color:var(--text-muted)">So we can look up your session if needed.</p>
+        </div>
+        <div style="height:1rem"></div>
+        <button class="btn btn-primary" id="continue-btn" onclick="goToPayment()">
+          Continue to payment
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── Screen 2: Payment instructions ──────────────────────── -->
+    <div class="screen" id="screen-2">
+      <div class="nav-row">
+        <button class="back-btn" onclick="goBack()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Back
+        </button>
+      </div>
+
+      <div class="card" style="margin-bottom:.75rem">
+        <p class="section-title">Pay to connect</p>
+        <div id="payment-instructions">
+          <p id="portal-instructions" style="color:var(--text-muted);font-size:.9rem;margin-bottom:1rem"></p>
+
+          <div style="text-align:center;margin-bottom:1rem">
+            <div style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted)">
+              <span id="pay-provider">M-Pesa</span> number
+            </div>
+            <div class="payment-number" id="pay-number">–</div>
+            <div style="font-size:.9rem;color:var(--text-muted)">
+              Account name: <strong id="pay-name">–</strong>
+            </div>
+          </div>
+
+          <div class="card" style="background:var(--primary-xlight);box-shadow:none;border:1px solid var(--primary-light)">
+            <div class="summary-row">
+              <span>Plan</span>
+              <strong id="pay-plan-name">–</strong>
+            </div>
+            <div class="summary-row">
+              <span>Amount</span>
+              <strong id="pay-amount">–</strong>
+            </div>
+            <div class="summary-row">
+              <span>Reference</span>
+              <strong id="pay-reference">–</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-accent" id="paid-btn" onclick="markPaid()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        I've paid — confirm my access
+      </button>
+
+      <p style="font-size:.78rem;color:var(--text-muted);text-align:center;margin-top:.75rem">
+        Our team will verify your payment and activate your access. This usually takes 1–2 minutes.
+      </p>
+    </div>
+
+    <!-- ─── Screen 3: Waiting for confirmation ───────────────────── -->
+    <div class="screen" id="screen-3">
+      <div class="wifi-icon-wrap">
+        <div class="pulse-icon" style="width:80px;height:80px">
+          <div style="position:relative;z-index:1;width:80px;height:80px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+              <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+              <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+              <circle cx="12" cy="20" r="1" fill="var(--primary)"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-bottom:2rem">
+        <h2 style="margin-bottom:.5rem">Verifying payment…</h2>
+        <p style="color:var(--text-muted)">Our team is confirming your payment.<br>This usually takes 1–2 minutes.</p>
+      </div>
+
+      <div class="card">
+        <div class="summary-row">
+          <span>Session ID</span>
+          <strong id="wait-session-id" style="font-family:monospace;font-size:.85rem">–</strong>
+        </div>
+        <div class="summary-row">
+          <span>Plan</span>
+          <strong id="wait-plan">–</strong>
+        </div>
+        <div class="summary-row">
+          <span>Status</span>
+          <span class="badge badge-pending" id="wait-status-badge">Pending</span>
+        </div>
+      </div>
+
+      <p style="font-size:.78rem;color:var(--text-muted);text-align:center;margin-top:1rem">
+        Keep this page open. You'll be connected automatically once confirmed.
+      </p>
+    </div>
+
+    <!-- ─── Screen 4: Connected ──────────────────────────────────── -->
+    <div class="screen" id="screen-4" style="text-align:center">
+      <div style="padding:2rem 0 1rem">
+        <div class="success-icon">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+
+        <h1 style="color:var(--accent);margin-bottom:.5rem">You're connected!</h1>
+        <p style="color:var(--text-muted)">Enjoy your internet access.</p>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem;text-align:left">
+        <div class="summary-row">
+          <span>Plan</span>
+          <strong id="done-plan">–</strong>
+        </div>
+        <div class="summary-row">
+          <span>Expires</span>
+          <strong id="done-expires">–</strong>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="browse-btn" onclick="startBrowsing()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Start browsing
+      </button>
+    </div>
+
+  </div><!-- portal-content -->
+</div><!-- portal-wrap -->
+
+<div id="toast"></div>
+
+<script src="/js/portal.js"></script>
+</body>
+</html>

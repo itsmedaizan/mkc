@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0284c7" />
+  <title>MK Connect — Admin</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<!-- ─── Login screen ──────────────────────────────────────────────────────── -->
+<div id="login-view" style="display:none">
+  <div class="login-wrap">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div class="portal-logo" style="margin:0 auto 1rem">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+          <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+          <circle cx="12" cy="20" r="1" fill="currentColor"/>
+        </svg>
+      </div>
+      <h1 style="color:var(--primary)">MK Connect</h1>
+      <p style="color:var(--text-muted);margin-top:.25rem">Admin Dashboard</p>
+    </div>
+
+    <div class="card" style="width:100%;max-width:380px">
+      <form id="login-form" onsubmit="login(event)">
+        <div class="form-group" style="margin-bottom:.75rem">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" autocomplete="username" required />
+        </div>
+        <div class="form-group" style="margin-bottom:1rem">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-primary" id="login-btn">Sign in</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Main app ───────────────────────────────────────────────────────────── -->
+<div id="app-view" style="display:none">
+
+  <!-- Header -->
+  <div class="admin-header">
+    <h1>MK Connect</h1>
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <span style="font-size:.82rem;color:var(--text-muted)" id="admin-username-label"></span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('sessions', this)">Sessions</button>
+    <button class="tab-btn" onclick="switchTab('plans', this)">Plans</button>
+    <button class="tab-btn" onclick="switchTab('settings', this)">Settings</button>
+  </div>
+
+  <!-- ─── Sessions tab ────────────────────────────────────────────── -->
+  <div class="tab-panel active" id="tab-sessions">
+
+    <!-- Revenue summary -->
+    <div class="stat-grid" id="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">Today</div>
+        <div class="stat-value" id="rev-today">—</div>
+        <div class="stat-currency">TZS</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">This week</div>
+        <div class="stat-value" id="rev-week">—</div>
+        <div class="stat-currency">TZS</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">This month</div>
+        <div class="stat-value" id="rev-month">—</div>
+        <div class="stat-currency">TZS</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" id="rev-pending" style="color:var(--warn)">—</div>
+        <div class="stat-currency" style="color:var(--warn)">sessions</div>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterSessions('all', this)">All</button>
+      <button class="filter-tab" onclick="filterSessions('pending', this)">Pending</button>
+      <button class="filter-tab" onclick="filterSessions('active', this)">Active</button>
+      <button class="filter-tab" onclick="filterSessions('failed', this)">Failed</button>
+      <button class="filter-tab" onclick="filterSessions('expired', this)">Expired</button>
+    </div>
+
+    <!-- Refresh button -->
+    <div style="padding:.5rem 1rem;display:flex;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="loadSessions(true)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+    </div>
+
+    <!-- Session list -->
+    <div class="session-list" id="session-list">
+      <div class="empty-state">
+        <div class="spinner spinner-primary" style="margin:0 auto 1rem"></div>
+        <p>Loading sessions…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Plans tab ────────────────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-plans">
+    <div style="padding:1rem;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary btn-sm" style="width:auto" onclick="openPlanModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add plan
+      </button>
+    </div>
+    <div style="padding:0 1rem 5rem" id="plan-list">
+      <div class="empty-state">
+        <div class="spinner spinner-primary" style="margin:0 auto 1rem"></div>
+        <p>Loading plans…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Settings tab ─────────────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="settings-section">
+
+      <div class="settings-group">
+        <div class="settings-group-title">Business info</div>
+        <div class="form-group">
+          <label>Business name</label>
+          <input type="text" id="s-business-name" />
+        </div>
+        <div class="form-group">
+          <label>Currency</label>
+          <input type="text" id="s-currency" placeholder="TZS" />
+        </div>
+        <div class="form-group">
+          <label>Payment instructions (shown to customers)</label>
+          <textarea id="s-portal-instructions" rows="3" style="resize:vertical"></textarea>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-title">Mobile money / payment details</div>
+        <div class="form-group">
+          <label>Provider (e.g. M-Pesa, Tigo, Airtel)</label>
+          <input type="text" id="s-mm-provider" />
+        </div>
+        <div class="form-group">
+          <label>Phone number</label>
+          <input type="tel" id="s-mm-number" placeholder="0712 345 678" />
+        </div>
+        <div class="form-group">
+          <label>Account name</label>
+          <input type="text" id="s-mm-name" />
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-group-title">Omada controller</div>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.5rem">
+          These are stored server-side only and never sent to customers.
+        </p>
+        <div class="form-group">
+          <label>Controller URL (include port)</label>
+          <input type="url" id="s-omada-url" placeholder="https://192.168.1.1:8043" />
+        </div>
+        <div class="form-group">
+          <label>Controller ID (Omada CID)</label>
+          <input type="text" id="s-omada-cid" placeholder="abc123..." />
+        </div>
+        <div class="form-group">
+          <label>Site ID</label>
+          <input type="text" id="s-omada-site" />
+        </div>
+        <div class="form-group">
+          <label>Operator username</label>
+          <input type="text" id="s-omada-user" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>Operator password</label>
+          <input type="password" id="s-omada-pass" placeholder="Leave blank to keep existing" autocomplete="new-password" />
+        </div>
+        <button class="btn btn-outline btn-sm" style="width:auto;margin-top:.25rem" onclick="testOmada()">
+          Test connection
+        </button>
+        <div id="omada-test-result" style="font-size:.85rem;margin-top:.5rem"></div>
+      </div>
+
+      <button class="btn btn-primary" id="save-settings-btn" onclick="saveSettings()">Save settings</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ─── Plan modal ─────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="plan-modal" style="display:none" onclick="closePlanModal(event)">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="plan-modal-title">Add plan</span>
+      <button class="btn btn-ghost btn-sm" style="width:auto" onclick="closePlanModal()">✕</button>
+    </div>
+    <form id="plan-form" onsubmit="savePlan(event)">
+      <input type="hidden" id="plan-edit-id" />
+      <div class="form-group" style="margin-bottom:.75rem">
+        <label>Name</label>
+        <input type="text" id="plan-name" placeholder="e.g. 1 Hour" required />
+      </div>
+      <div class="form-group" style="margin-bottom:.75rem">
+        <label>Price (TZS)</label>
+        <input type="number" id="plan-price" min="0" required />
+      </div>
+      <div class="form-group" style="margin-bottom:.75rem">
+        <label>Duration (minutes)</label>
+        <input type="number" id="plan-duration" min="1" placeholder="e.g. 60 for 1 hour" required />
+      </div>
+      <div class="form-group" style="margin-bottom:.75rem">
+        <label>Data cap (MB) — leave blank for unlimited</label>
+        <input type="number" id="plan-data" min="0" placeholder="Unlimited" />
+      </div>
+      <div class="form-group" style="margin-bottom:.75rem">
+        <label>Description (shown to customers)</label>
+        <input type="text" id="plan-desc" placeholder="e.g. Great for streaming" />
+      </div>
+      <div class="form-group" style="margin-bottom:1rem">
+        <label>Sort order (lower = shown first)</label>
+        <input type="number" id="plan-sort" value="0" />
+      </div>
+      <div style="display:flex;gap:.75rem">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-ghost" onclick="closePlanModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>
